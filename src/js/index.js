@@ -129,4 +129,4 @@ function createMarkup(arr) {
       .join('');
   }
   
-  export { createMarkup };
+//   export { createMarkup };
