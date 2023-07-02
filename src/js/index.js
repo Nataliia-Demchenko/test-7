@@ -1,133 +1,132 @@
 
+import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-import Notiflix from 'notiflix';
-import { getData } from './api';
+
+// import { createMarkup } from './markup';
+import { fetchImages } from './api';
+
+let page = 1;
+let query = '';
+let totalHits;
 
 const refs = {
-  search: document.querySelector('.search-form'),
-  galleryEl: document.querySelector('.gallery'),
-  loadMoreBtn: document.querySelector('.load-more'),
-  target: document.querySelector('.js-guard'),
+  form: document.querySelector('.search-form'),
+  gallery: document.querySelector('.gallery'),
+  btnSubmit: document.querySelector('.submit'),
+  btnLoadMore: document.querySelector('.load-more'),
 };
 
-let query = '';
-let currentPage = 1;
-const perPage = 40;
+refs.form.addEventListener('submit', handlerSubmit);
+refs.btnLoadMore.addEventListener('click', handlerClickMore);
 
-refs.loadMoreBtn.classList.add('is-hidden');
+refs.btnLoadMore.hidden = true;
 
-// Magnification of images when clicked
-let lightbox = new SimpleLightbox('.photo-card a', {
-  captionDelay: 250,
-});
-
-// Endless scrolling down
-const options = {
-  root: null,
-  rootMargin: '200px',
-  threshold: 1.0,
-};
-
-let observer = new IntersectionObserver(onLoad, options);
-function onLoad(entries, observer) {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      currentPage += 1;
-      lightbox.refresh();
-      showPhotos(query, currentPage);
-    }
-  });
+async function handlerClickMore() {
+  page += 1;
+  const data = await fetchImages(query, page);
+  refs.gallery.insertAdjacentHTML('beforeend', createMarkup(data.data.hits));
+  modal.refresh();
+  checkLoadMore();
+  scroll();
 }
-// Performing image search and playback by subject
-refs.search.addEventListener('submit', onSearchButton);
 
-function onSearchButton(event) {
-  event.preventDefault();
-  currentPage = 1;
-
-  observer.unobserve(refs.target);
-
-  const searchValue = event.currentTarget.elements.searchQuery.value.trim();
-
-  if (!searchValue) {
-    Notiflix.Notify.failure(
-      'Sorry, there are no images matching your search query. Please try again.'
+async function handlerSubmit(evt) {
+  evt.preventDefault();
+  query = evt.currentTarget.searchQuery.value;
+  refs.gallery.innerHTML = '';
+  page = 1;
+  refs.btnLoadMore.hidden = true;
+  try {
+    const data = await fetchImages(query, page);
+    totalHits = data.data.totalHits;
+    refs.gallery.insertAdjacentHTML('beforeend', createMarkup(data.data.hits));
+    modal.refresh();
+  } catch (error) {
+    console.log(error);
+    Notiflix.Report.failure(
+      'Oops!',
+      'Something went wrong! Try reloading the page!',
+      'Ok'
     );
-    return;
-  } else if (searchValue === query) {
-    return;
+  } finally {
+    if (!totalHits) {
+      Notiflix.Notify.info(
+        'Sorry, there are no images matching your search query. Please try again.'
+      );
+    } else {
+      Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
+      refs.btnLoadMore.hidden = false;
+    }
   }
-  refs.galleryEl.innerHTML = '';
-  query = searchValue;
-  lightbox.refresh();
-  showPhotos(query, currentPage);
-
-  return query;
+  checkLoadMore();
 }
-// Sending a request and rendering the gallery
-async function showPhotos(query, currentPage = 1) {
-  const { hits, totalHits } = await getData(query, currentPage);
-  const totalPages = Math.ceil(totalHits / perPage);
 
-  refs.galleryEl.insertAdjacentHTML('beforeend', createMarkupCards({ hits }));
-
-  if (currentPage === totalPages) {
-    observer.unobserve(refs.target);
-
-    Notiflix.Notify.info(
+function checkLoadMore() {
+  if (totalHits / 40 < page && totalHits) {
+    refs.btnLoadMore.hidden = true;
+    Notiflix.Notify.warning(
       "We're sorry, but you've reached the end of search results."
     );
-  } else {
-    observer.observe(refs.target);
   }
-
-	// Checking whether the response from the server is not empty
-	  if (hits.length === 0) {
-    Notiflix.Notify.failure(
-      'Sorry, there are no images matching your search query. Please try again.'
-    );
-  } else if (currentPage === 1) {
-    Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
-  }
-  lightbox.refresh();
 }
 
-// Creating Image Group markup
-function createMarkupCards({ hits }) {
-  return hits
-    .map(
-      ({
-        webformatURL,
-        largeImageURL,
-        tags,
-        likes,
-        views,
-        comments,
-        downloads,
-      }) => `<div class="photo-card">
-            <a href="${largeImageURL}">
-            <img src="${webformatURL}" alt="${tags}" loading="lazy" />
-            </a>
-            <div class="info">
-                <p class="info-item">
-                <b>Likes</b>
-                ${likes}
-                </p>
-                <p class="info-item">
-                <b>Views</b>
-                ${views}
-                </p>
-                <p class="info-item">
-                <b>Comments</b>
-                ${comments}
-                </p>
-                <p class="info-item">
-                <b>Downloads</b>
-                ${downloads}
-                </p>
-            </div>
-            </div>`
-    )
-    .join('');
+const modal = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: 250,
+  navText: ['◀', '▶'],
+  closeText: '✖',
+});
+
+function scroll() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
 }
+
+// Markup
+
+function createMarkup(arr) {
+    return arr
+      .map(
+        ({
+          webformatURL,
+          largeImageURL,
+          tags,
+          likes,
+          views,
+          comments,
+          downloads,
+        }) => {
+          return `<div class="photo-card">
+          <a class="photo-link" href="${largeImageURL}">
+          <div class="thumb">
+          <img class="photo-image" src="${webformatURL}" alt="${tags}" loading="lazy" />
+          </div>
+        <div class="info">
+          <p class="info-item">
+            <b>Likes</b><span>${likes}</span>
+          </p>
+          <p class="info-item">
+            <b>Views</b><span>${views}</span>
+          </p>
+          <p class="info-item">
+            <b>Comments</b><span>${comments}</span>
+          </p>
+          <p class="info-item">
+            <b>Downloads</b><span>${downloads}</span>
+          </p>
+        </div>
+        </a>
+      </div>`;
+        }
+      )
+      .join('');
+  }
+  
+  export { createMarkup };
