@@ -5,7 +5,7 @@ body {
 
     height: 100vh;
     background-attachment: fixed;
-    background-image: linear-gradient(to bottom, #fafafa 90%, rgba(68, 68, 105, 0.5));
+    background-image: linear-gradient(to bottom, #fafafa 90%, rgba(68, 68, 105, 0.5))
 }
 
 p {
@@ -33,10 +33,10 @@ a:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
     height: 50px;
-    background-color: #777988;
-    box-shadow: 0px 1px 6px 0px rgb(111, 111, 116);
+    width: 100%;
+    background-color: #858690;
+    box-shadow: 0px 1px 6px 0px rgb(126, 126, 130);
 }
 
 
@@ -50,12 +50,11 @@ input[name="searchQuery"] {
     font-family: inherit;
     font-size: 16px;
     font-weight: 500;
-    background-color: #fafafa;
     border: none;
     border-top-left-radius: 5px;
     border-bottom-left-radius: 5px;
     outline: none;
-
+    background-color: #fafafa;
 }
 
 button[type="submit"] {
@@ -64,11 +63,11 @@ button[type="submit"] {
     padding-right: 12px;
     height: 30px;
     border: none;
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
     font-family: inherit;
     font-size: 16px;
     font-weight: 500;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
     background-color: #e2e2e9;
 
 }
@@ -81,10 +80,10 @@ button[type="submit"]:hover {
     max-width: 1440px;
     margin: 0 auto;
     padding-top: 60px;
+    gap: 25px;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 25px;
 }
 
 .photo-card {
@@ -96,11 +95,11 @@ button[type="submit"]:hover {
 
 .info {
     display: flex;
-    justify-content: center;
     width: 100%;
     padding-top: 10px;
     padding-bottom: 10px;
     background-color: inherit;
+    justify-content: center;
 }
 
 .info-item {

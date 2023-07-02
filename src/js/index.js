@@ -1,11 +1,12 @@
-import Notiflix from 'notiflix';
+
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
+import Notiflix from 'notiflix';
 import { getData } from './api';
 
 const refs = {
   search: document.querySelector('.search-form'),
-  gallery: document.querySelector('.gallery'),
+  galleryEl: document.querySelector('.gallery'),
   loadMoreBtn: document.querySelector('.load-more'),
   target: document.querySelector('.js-guard'),
 };
@@ -39,9 +40,9 @@ function onLoad(entries, observer) {
   });
 }
 // Performing image search and playback by subject
-refs.search.addEventListener('submit', onSearchBtn);
+refs.search.addEventListener('submit', onSearchButton);
 
-function onSearchBtn(event) {
+function onSearchButton(event) {
   event.preventDefault();
   currentPage = 1;
 
@@ -57,7 +58,7 @@ function onSearchBtn(event) {
   } else if (searchValue === query) {
     return;
   }
-  refs.gallery.innerHTML = '';
+  refs.galleryEl.innerHTML = '';
   query = searchValue;
   lightbox.refresh();
   showPhotos(query, currentPage);
@@ -69,7 +70,7 @@ async function showPhotos(query, currentPage = 1) {
   const { hits, totalHits } = await getData(query, currentPage);
   const totalPages = Math.ceil(totalHits / perPage);
 
-  refs.gallery.insertAdjacentHTML('beforeend', createMarkupCards({ hits }));
+  refs.galleryEl.insertAdjacentHTML('beforeend', createMarkupCards({ hits }));
 
   if (currentPage === totalPages) {
     observer.unobserve(refs.target);
